@@ -1,7 +1,15 @@
 import torch
 
 class FeatureExtractNet(torch.nn.Module):
-    def __init__(self, image_patch, nColor=1, mid_channels=[8,12,16,32,48], out_features=128):
+    def __init__(self, image_patch_size:int, nColor=1, mid_channels=[8,12,16,32,48], out_features=128):
+        """ Feature Extraction Network
+        
+        Args:
+            image_patch_size (int): the size of the input image patch to determine the input features of the linear layer.
+            nColor (int, optional): the number of channels of the input image patch. Defaults to 1.
+            mid_channels (list[int], optional): the number of middle channels of the encoders. Defaults to [8,12,16,32,48].
+            out_features (int, optional): the dimension of the fianl output feature vectors. Defaults to 128.
+        """
         super(FeatureExtractNet, self).__init__()
         
         self.in_channel = nColor
@@ -10,27 +18,32 @@ class FeatureExtractNet(torch.nn.Module):
         
         kernel, stride, padding = 3, 1, 1
         
+        # encoders
         self.encoders = list()
         for idx, mid_channel in enumerate(mid_channels):
             encoder_in = nColor if idx == 0 else mid_channels[idx-1]
             self.encoders.append(torch.nn.Conv2d(encoder_in, mid_channel, kernel, stride, padding, bias=True))            
         self.encoders = torch.nn.ModuleList(self.encoders)
         
+        # linear layer
         self.linear_infeatures = mid_channels[-1] * (image_patch // 2 ** len(mid_channels)) ** 2
         self.linear = torch.nn.Linear(self.linear_infeatures, out_features)
         
+        # maxpool
         self.maxpool = torch.nn.MaxPool2d(kernel_size=2)
-        self.relu = torch.nn.ReLU()
         
+        # activation
+        self.relu = torch.nn.ReLU()
+        self.lrelu = torch.nn.LeakyReLU()
         
     def forward(self, x):
         """ Forward propagation of the FeatureExtractNet
 
         Args:
-            x (torch.tensor): Image stack with dimension [N,nColor,X,Y] or [nColor,X,Y]
+            x (torch.tensor): input image stacks with dimension [N,nColor,X,Y] or [nColor,X,Y]
             
         Returns:
-            x (torch.tensor): Extracted feature with dimension [N,out_features] or [out_features]
+            x (torch.tensor): extracted feature vectors with dimension [N,out_features] or [out_features]
         """
         for encoder in self.encoders:
             x = self.maxpool(self.relu(encoder(x)))
