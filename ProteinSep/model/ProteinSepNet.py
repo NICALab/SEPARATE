@@ -5,9 +5,10 @@ class ProteinSepNet(torch.nn.Module):
         """ Protein Separation Network, simple U-Net style
 
         Args:
-            nTarget (int, optional): _description_. Defaults to 2.
-            mid_channels (list, optional): _description_. Defaults to [8,12,16,32,48,64].
-            one_by_one_channels (list, optional): _description_. Defaults to [6,4].
+            nTarget (int, optional): the number of channels of the output image patch.
+                                     the number of target proteins to unmix. Defaults to 2.
+            mid_channels (list[int], optional): the number of middle channels. Defaults to [8,12,16,32,48,64].
+            one_by_one_channels (list[int], optional): the number of channels of 1x1 conv. Defaults to [6,4].
         """
         super(ProteinSepNet, self).__init__()
         
@@ -17,6 +18,8 @@ class ProteinSepNet(torch.nn.Module):
         self.one_by_one_channels = one_by_one_channels
         
         kernel, stride, padding = 3, 1, 1
+        
+        # encoders, decoders, upconvs
         self.encoders = list()
         self.decoders = list()
         self.upconvs = list()
@@ -36,7 +39,6 @@ class ProteinSepNet(torch.nn.Module):
                 upconv_stride = [1,2,2]
             upconv_in = mid_channel if idx == len(mid_channels)-1 else mid_channels[idx+1]
             self.upconvs.append(torch.nn.ConvTranspose3d(upconv_in, mid_channel, upconv_kernel, upconv_stride))
-        
         self.encoders = torch.nn.ModuleList(self.encoders)
         self.decoders = torch.nn.ModuleList(self.decoders)
         self.upconvs = torch.nn.ModuleList(self.upconvs)
@@ -62,10 +64,10 @@ class ProteinSepNet(torch.nn.Module):
         """ Forward propagation of the ProteinSepNet
 
         Args:
-            x (torch.tensor): Image stack with dimension [N,1,Z,X,Y] or [1,Z,X,Y]
+            x (torch.tensor): input image stacks with dimension [N,1,Z,X,Y] or [1,Z,X,Y]
 
         Returns:
-            x (torch.tensor): Separated image stack wiht dimension [N,nTarget,Z,X,Y] or [nTarget,Z,X,Y]
+            x (torch.tensor): unmixed image stacks with dimension [N,nTarget,Z,X,Y] or [nTarget,Z,X,Y]
         """
         x_skip_connection = list()
         for idx, encoder in enumerate(self.encoders):
@@ -74,7 +76,6 @@ class ProteinSepNet(torch.nn.Module):
             if idx == 1:    # maxpool in z
                 x = self.maxpoolz(x)
             else:
-            # elif idx != len(self.encoders) - 1:
                 x = self.maxpool(x)
         
         for idx, (decoder, upconv, x_tmp) in enumerate(reversed(list(zip(self.decoders, self.upconvs, x_skip_connection)))):
