@@ -11,7 +11,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser()
     
     # Experiment profile
-    parser.add_argument("--exp_name", type=str, default="myEXP", help="name of the experiment")
+    parser.add_argument("--exp_name", type=str, default="mytest_FeatureExtractNet ", help="name of the experiment")
     parser.add_argument("--random_seed", type=int, default=0, help="random seed for rng")
     parser.add_argument("--results_dir", type=str, default="./results/FeatureExtract", help="root directory to save results")
     parser.add_argument("--document_dir", type=str, default="./results/FeatureExtract", help="root directory to save log and namesapce")
