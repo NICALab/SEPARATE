@@ -1,4 +1,3 @@
-import random
 import yaml
 import argparse
 import tifffile
@@ -8,13 +7,11 @@ import numpy as np
 
 from tqdm import tqdm
 from scipy.io import savemat
-from argparse import Namespace
 
 from FeatureExtract.model.FeatureExtractNet import FeatureExtractNet
 from utils.FeatureExtract.dimension_reduction import calc_tsne, twodim_visualization
 from utils.FeatureExtract.protein_pairing import calc_distance, find_optimal_group_of_pairs
 from utils.FeatureExtract.dataset import DataLoaderFeatureExtract
-from utils.FeatureExtract.util import parse_arguments
 from utils.image_transform import random_transform
 
 def test(dataloader, model, opt):
@@ -127,7 +124,7 @@ if __name__=="__main__":
     
     with open(test_opt.namespace_file) as f:
         opt = yaml.load(f, Loader=yaml.FullLoader)
-    opt = Namespace(**opt)
+    opt = argparse.Namespace(**opt)
     print(opt.exp_name)
     
     if test_opt.pairing_protein_list == [""]:
@@ -135,8 +132,8 @@ if __name__=="__main__":
     elif set(test_opt.pairing_protein_list).issubset(set(opt.protein_list)):
         test_opt.pairing_protein_list = sorted(test_opt.pairing_protein_list)
     else:
-        raise Exception("pariing_protein_list must be the subset of {}".format(set(opt.protein_list)))
-    print("Pairing protein list: ", test_opt.pairing_protein_list)
+        raise Exception("pairing_protein_list must be the subset of {}".format(set(opt.protein_list)))
+    print("The list of proteins for pairing: ", test_opt.pairing_protein_list)
     
     ##### Load model #####
     model = FeatureExtractNet(opt.patch_size[-1], nColor=1, mid_channels=opt.mid_channels_FeatureExtractNet, 
@@ -149,11 +146,10 @@ if __name__=="__main__":
     print('Loaded pre-trained model weights of epoch {}'.format(test_opt.test_epoch))
     
     ##### Load dataset #####
-    print("number of test dataset: {}".format(len(opt.testdata_list)))
+    print("The number of test dataset: {}".format(len(opt.testdata_list)))
     dataloader_test = DataLoaderFeatureExtract(opt.testdata_list, opt.protein_list, opt.patch_size, test_opt.batch_size, test_opt.batch_num, 
                                                opt.random_seed, opt.brightness_range, opt.norm_type, opt.norm_quantile, shuffle=True)
 
-    ##### Test #####
     images, image_labels, latent_features, loss_mean_total, loss_mean_inter, loss_mean_intra \
         = test(dataloader_test, model, opt)
         
