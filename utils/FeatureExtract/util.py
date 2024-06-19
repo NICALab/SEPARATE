@@ -4,8 +4,6 @@ import yaml
 import argparse
 import warnings
 
-from itertools import permutations
-
 from utils.load_namespace import load_namespace
 
 def parse_arguments():
