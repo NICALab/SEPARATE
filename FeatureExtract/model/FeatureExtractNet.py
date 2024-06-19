@@ -26,7 +26,7 @@ class FeatureExtractNet(torch.nn.Module):
         self.encoders = torch.nn.ModuleList(self.encoders)
         
         # linear layer
-        self.linear_infeatures = mid_channels[-1] * (image_patch // 2 ** len(mid_channels)) ** 2
+        self.linear_infeatures = mid_channels[-1] * (image_patch_size // 2 ** len(mid_channels)) ** 2
         self.linear = torch.nn.Linear(self.linear_infeatures, out_features)
         
         # maxpool
