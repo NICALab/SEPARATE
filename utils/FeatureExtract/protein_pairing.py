@@ -76,7 +76,7 @@ def protein_pairing(G, n_pair, results=list(), used_protein=set()):
     return results, used_protein
 
 def find_optimal_group_of_pairs(scores, pairing_protein_list):
-    print("\n##### finding optimal group of pairs #####")
+    print("\n##### Spatial expression pattern guided protein pairing #####")
     G = nx.Graph()
     sorted_scores = sorted(scores, key = lambda item: item[1], reverse=True)
     n_pair = len(pairing_protein_list)//2
