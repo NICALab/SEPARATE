@@ -71,7 +71,7 @@ python -m FeatureExtract.script.train --exp_name mytest_FeatureExtractNet --prot
 python -m FeatureExtract.script.test ./results/FeatureExtract/namespace/mytest_FeatureExtractNet.yaml  --pairing_protein_list Double-cortin GFAP LaminB1 NeuN Nucleolin PV --test_epoch 10
 ```
 * You can check the optimal protein pairing in the terminal like below
-  
+
   ![SpatialExpressionPatternGuidedProteinPairing](https://github.com/NICALab/SEPARATE/assets/88869620/9c071038-0017-4d62-8139-b0f29e779db1)
 
 #### 3. Train the protein separation network
