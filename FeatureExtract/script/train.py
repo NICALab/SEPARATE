@@ -41,7 +41,7 @@ def train(dataloader, model, optimizer, rng, writer, epoch, opt):
     inter_margin = opt.inter_margin
     intra_margin = opt.intra_margin
     
-    for idx, data in enumerate(tqdm(dataloader, desc="Evaluate ProteinSepNet")):
+    for idx, data in enumerate(tqdm(dataloader, desc="Train FeatureExtractNet")):
         ##### Load data #####
         image, _, image_label = data
         image_label_list = list(set(image_label.tolist()))
@@ -146,7 +146,7 @@ def evaluate(dataloader, model, opt):
         inter_margin = opt.inter_margin
         intra_margin = opt.intra_margin
         
-        for idx, data in enumerate(tqdm(dataloader, desc="evaluation")):
+        for idx, data in enumerate(tqdm(dataloader, desc="Evaluate FeatureExtractNet")):
             ##### Load data #####
             image, _, image_label = data
             image_label_list = list(set(image_label.tolist()))
