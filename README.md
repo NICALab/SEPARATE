@@ -28,7 +28,7 @@ conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvi
 
 
 ## Getting started
-#### 0. Organize the image data
+### 0. Organize the image data
 * ##### To train the feature extraction network #####
   
   The folder `./data/sample_data_FeatureExtract/` contains two subfolders named `train` and  `test`, each containing the `.tif` files of individual protein images for training and testing (to identify protein pairing) the _feature extraction network_, respectively.
@@ -59,12 +59,9 @@ conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvi
  
   There are no restrictions on the names of folders and images, as long as they follow the specified format of N subfolders.
 
-#### 1. Train the feature extraction network
+### 1. Train the feature extraction network
 ```
 python -m FeatureExtract.script.train --exp_name mytest_FeatureExtractNet --protein_list CALB2 Calnexin GFAP Double-cortin LaminB1 MAP2 NeuN Nucleolin PV S100B --data_dir ./data/sample_data --results_dir ./results/FeatureExtract/ --n_epochs 100
-```
-```
-python -m FeatureExtract.script.train --exp_name mytest_FeatureExtractNet_6proteins ---protein_list GFAP Double-cortin LaminB1 NeuN Nucleolin PV --data_dir ./data/sample_data --results_dir ./results/FeatureExtract/ --n_epochs 100
 ```
 * You can check the extracted feature vector (t-SNE plot) in `./results/FeatureExtract/tsne/mytest_FeatureExtractNet/`
   <img src="https://github.com/NICALab/SEPARATE/assets/88869620/7ef98021-c980-415f-995e-184fe8c5292a.png" height="350"/>
