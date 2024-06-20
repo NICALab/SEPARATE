@@ -23,7 +23,6 @@ class DatasetFeatureExtract(Dataset):
             norm_type (str): Type of the normalization
             norm_quantile (list[float]): Upper and lower qunatile for normalization
         """
-        
         # Check arguments
         if len(patch_size) != 3:
             raise Exception("Length of patch_size must be 3")
@@ -103,32 +102,19 @@ def DataLoaderFeatureExtract(image_file_list:list[str], protein_list:list[str], 
     image_labels = list()
     
     for image_file in image_file_list:
-        # image file organization
-        # : *{protein α}_{protein β}_{sample idx}_ch1.tif    individual image of protein α
-        # : *{protein α}_{protein β}_{sample idx}_ch2.tif    individual image of protein β
-        # : *{protein α}_{protein β}_{sample idx}_ch3.tif    mixed image of protein α and protein β
-        
         # image
         image = torch.from_numpy(skio.imread(image_file).astype(np.float32))
         
         # image label
         try:
-            if image_file.split("/")[-1].split("_")[-1] == "ch1.tif":
-                protein = image_file.split("/")[-1].split("_")[-4]
-                image_label = protein_list.index(protein)
-            elif image_file.split("/")[-1].split("_")[-1] == "ch2.tif":
-                protein = image_file.split("/")[-1].split("_")[-3]
-                image_label = protein_list.index(protein)
-            else:
-                raise Exception("\n There is an error with the file name organization with channel number. \
-                                 \n Check the function parse_arguments in ./utils/FeatureExtract/util.py")
-            
-            images.append(image)
-            image_labels.append(image_label)
-            
+            protein = image_file.split("/")[-1].split("_")[-2]
+            image_label = protein_list.index(protein)
         except:
             raise Exception("\n There is an error with the file name organization with protein name. \
                              \n Check the function parse_arguments in ./utils/FeatureExtract/util.py")
+            
+        images.append(image)
+        image_labels.append(image_label)
     
     dataset = DatasetFeatureExtract(images, image_labels, patch_size, batch_size, batch_num, 
                                     rng_seed, brightness_range, norm_type, norm_quantile)

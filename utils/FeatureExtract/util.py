@@ -67,35 +67,19 @@ def parse_arguments():
         opt.traindata_list = list()
         opt.testdata_list = list()
         for folder in opt.data_dir:
-            # image file organization
-            # : *{protein α}_{protein β}_{sample idx}_ch1.tif    individual image of protein α
-            # : *{protein α}_{protein β}_{sample idx}_ch2.tif    individual image of protein β
-            # : *{protein α}_{protein β}_{sample idx}_ch3.tif    mixed image of protein α and protein β
-            
-            for train_tmp in glob.glob("{}/*/train/*.tif".format(folder)):
-                if train_tmp.split("/")[-1].split("_")[-1] == "ch1.tif":
-                    protein = train_tmp.split("/")[-1].split("_")[-4]
-                elif train_tmp.split("/")[-1].split("_")[-1] == "ch2.tif":
-                    protein = train_tmp.split("/")[-1].split("_")[-3]
-                else:
-                    continue
-                
+            # Train data
+            for file in glob.glob("{}/train/*.tif".format(folder)):
+                protein = file.split("/")[-1].split("_")[-2]
                 if protein in opt.protein_list:
-                    opt.traindata_list.append(train_tmp)
-            
-            for test_tmp in glob.glob("{}/*/test/*.tif".format(folder)):
-                if test_tmp.split("/")[-1].split("_")[-1] == "ch1.tif":
-                    protein = test_tmp.split("/")[-1].split("_")[-4]
-                elif test_tmp.split("/")[-1].split("_")[-1] == "ch2.tif":
-                    protein = test_tmp.split("/")[-1].split("_")[-3]
-                else:
-                    continue
-                
+                    opt.traindata_list += [file]
+            # Test data
+            for file in glob.glob("{}/test/*.tif".format(folder)):
+                protein = file.split("/")[-1].split("_")[-2]
                 if protein in opt.protein_list:
-                    opt.testdata_list.append(test_tmp)
+                    opt.testdata_list += [file]
         
-        opt.traindata_list = sorted(list(set(opt.traindata_list)))
-        opt.testdata_list = sorted(list(set(opt.testdata_list)))
+        opt.traindata_list = sorted(list(opt.traindata_list))
+        opt.testdata_list = sorted(list(opt.testdata_list))
         
         if len(opt.traindata_list) == 0:
             raise Exception("There is no train data")
