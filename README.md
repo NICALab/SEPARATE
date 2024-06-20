@@ -31,15 +31,15 @@ conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvi
 ### 0. Organize the image data
 * ##### To train the feature extraction network #####
   
-  The folder `./data/sample_data_FeatureExtract/` contains two subfolders named `train` and  `test`, each containing the `.tif` files of individual protein images for training and testing (to identify protein pairing) the _feature extraction network_, respectively.
+  The folder `./data/sampledata_FeatureExtract/` contains two subfolders named `train` and  `test`, each containing the `.tif` files of individual protein images for training and testing (to identify protein pairing) the _feature extraction network_, respectively.
 
   * The images are named using the format `{protein name}_{sample idx}.tif`, such as `CALB2_1.tif`, `GFAP_4.tif`, or `PV_3.tif`, and each `.tif` file contains single channel _**[Z, X, Y]**_ image of the protein.
 
-  The name of the images can start with any prefix but must end with the format `{protein name}_{sample idx}.tif` to be compatible with the provided code.
+  To be compatible with the provided code, the name of the images can start with any prefix but must end with the format `{protein name}_{sample idx}.tif`, and the name of protein shoud not include underscore( _ ). 
   
 * ##### To train the protein separation network #####
 
-  For the pair of two proteins—protein α and protein β—the folder `./data/sample_data_ProteinSep/{protein α}_{protein β}/` also contains two subfolders named `train` and  `test`, each containing the `.tif` files of individual protein images for training and testing the _protein separation network_, respectively.
+  For the pair of two proteins—protein α and protein β—the folder `./data/sampledata_ProteinSep/{protein α}_{protein β}/` also contains two subfolders named `train` and  `test`, each containing the `.tif` files of individual protein images for training and testing the _protein separation network_, respectively.
 
   * The images containing _**individual sigal of protein α**_ are named using the format `{protein α}_{protein β}_{sample idx}_ch1.tif`.
 
@@ -53,7 +53,7 @@ conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvi
 
 * ##### Demonstration of SEPARATE #####
 
-  For the demonstration of SEPARATE for 2N proteins using N fluorophores, the folder `./data/sample_data_demo/` contains N subfolder named `ch1`, `ch2`, ... , `chN`, each containing the single channel _**[Z, X, Y]**_ images of each pair of two proteins.
+  For the demonstration of SEPARATE for 2N proteins using N fluorophores, the folder `./data/demodata_SEPARATE/` contains N subfolder named `ch1`, `ch2`, ... , `chN`, each containing the single channel _**[Z, X, Y]**_ images of each pair of two proteins.
 
   * The images are named `ch{channel number}_{sample idx}.tif `, such as `ch1_1.tif` or `ch3_4.tif`.
  
@@ -61,7 +61,7 @@ conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvi
 
 ### 1. Train the feature extraction network
 ```
-python -m FeatureExtract.script.train --exp_name mytest_FeatureExtractNet --protein_list CALB2 Calnexin GFAP Double-cortin LaminB1 MAP2 NeuN Nucleolin PV S100B --data_dir ./data/sample_data --results_dir ./results/FeatureExtract/ --n_epochs 100
+python -m FeatureExtract.script.train --exp_name mytest_FeatureExtractNet --protein_list CALB2 Calnexin GFAP Double-cortin LaminB1 MAP2 NeuN Nucleolin PV S100B --data_dir ./data/sampledata_FeatureExtract --results_dir ./results/FeatureExtract/ --n_epochs 100
 ```
 * You can check the extracted feature vector (t-SNE plot) in `./results/FeatureExtract/tsne/mytest_FeatureExtractNet/`
   <img src="https://github.com/NICALab/SEPARATE/assets/88869620/7ef98021-c980-415f-995e-184fe8c5292a.png" height="350"/>
@@ -76,7 +76,7 @@ python -m FeatureExtract.script.test ./results/FeatureExtract/namespace/mytest_F
 
 #### 3. Train the protein separation network
 ```
-python -m ProteinSep.script.train --exp_name mytest_ProteinSepNet --protein_list LaminB1 PV --data_dir ./data/sample_data/Group1Pair4_LaminB1_PV --results_dir ./results/ProteinSep/ --n_epochs 10000
+python -m ProteinSep.script.train --exp_name mytest_ProteinSepNet --protein_list LaminB1 PV --data_dir ./data/sampledata_ProteinSep/Group1Pair4_LaminB1_PV --results_dir ./results/ProteinSep/ --n_epochs 10000
 ```
 
 #### 4. Inference of test data for protein separation network
@@ -86,5 +86,5 @@ python -m ProteinSep.script.test ./results/ProteinSep/namespace/mytest_ProteinSe
 
 #### 5. Demonstration of SEPARATE
 ```
-python -m ProteinSep.script.demo ./results/ProteinSep/namespace/mytest_ProteinSepNet_LaminB1_PV.yaml --testdata_dir ./data/demo_data/ch2_LaminB1_PV --test_epoch 100
+python -m ProteinSep.script.demo ./results/ProteinSep/namespace/mytest_ProteinSepNet_LaminB1_PV.yaml --testdata_dir ./data/demodata_SEPARATE/ch2_LaminB1_PV --test_epoch 100
 ```
