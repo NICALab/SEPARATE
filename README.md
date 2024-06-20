@@ -28,10 +28,10 @@ conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvi
 
 
 ## Getting started
-#### 0. Organize the image data for training network
+#### 0. Organize the image data
 * ##### To train the feature extraction network #####
   
-  The folder `./data/sample_data_FeatureExtract/` contains two subfolders named `train` and  `test`, each containing the `.tif` files of individual protein images for training and testing (protein pairing) the _feature extraction network_, respectively.
+  The folder `./data/sample_data_FeatureExtract/` contains two subfolders named `train` and  `test`, each containing the `.tif` files of individual protein images for training and testing (to identify protein pairing) the _feature extraction network_, respectively.
 
   * The images are named using the format `{protein name}_{sample idx}.tif`, such as `CALB2_1.tif`, `GFAP_4.tif`, or `PV_3.tif`, and each `.tif` file contains single channel _**[Z, X, Y]**_ image of the protein.
 
@@ -39,7 +39,7 @@ conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvi
   
 * ##### To train the protein separation network #####
 
-  For the pair of two proteins—protein α and protein β—the folder  `./data/sample_data_ProteinSep/{protein α}_{protein β}/` also contains two subfolders named `train` and  `test`, each containing the `.tif` files of individual protein images for training and testing the _protein separation network_, respectively.
+  For the pair of two proteins—protein α and protein β—the folder `./data/sample_data_ProteinSep/{protein α}_{protein β}/` also contains two subfolders named `train` and  `test`, each containing the `.tif` files of individual protein images for training and testing the _protein separation network_, respectively.
 
   * The images containing _**individual sigal of protein α**_ are named using the format `{protein α}_{protein β}_{sample idx}_ch1.tif`.
 
