@@ -7,8 +7,6 @@ import torch
 import numpy as np
 import skimage.io as skio
 
-from argparse import Namespace
-
 from ProteinSep.model.ProteinSepNet import ProteinSepNet
 from utils.image_normalize import return_norm_func
 
@@ -30,7 +28,7 @@ if __name__=="__main__":
     
     with open(test_opt.namespace_file) as f:
         opt = yaml.load(f, Loader=yaml.FullLoader)
-    opt = Namespace(**opt)
+    opt = argparse.Namespace(**opt)
     print(opt.exp_name)
     
     ##### Load model #####
@@ -43,7 +41,7 @@ if __name__=="__main__":
     print('Loaded pre-trained model of epoch {}'.format(test_opt.test_epoch))
     
     norm_func = return_norm_func(opt.norm_type)
-
+    
     #### Make results folder #####
     results_dir = "{}/images/{}/{}/".format(opt.results_dir, "/".join(opt.data_dir.split("/")[-2:]), opt.exp_name)
     os.makedirs(results_dir, exist_ok=True)
@@ -63,27 +61,27 @@ if __name__=="__main__":
         
         print("Loaded", image_file)
         
-        # real mixed image inference
+        # Inference of real mixed image
         image_real = torch.unsqueeze(torch.unsqueeze(image_real, 0), 0)
         if not opt.use_CPU:
             image_real = image_real.cuda()
-            
+        
         model.eval()
         with torch.no_grad():
             try:
-                separated_real = model(image_real[:,:,:16]).cpu().squeeze()
-                for idx in range(image_real.shape[2]-separated_real.shape[1]):
-                    separated_real_ = model(image_real[:,:,idx+1:idx+17]).cpu().squeeze()
-                    separated_real = torch.concat([separated_real, separated_real_[:,-1:]], axis=1)
+                unmixed_real = model(image_real[:,:,:16]).cpu().squeeze()
+                for idx in range(image_real.shape[2]-unmixed_real.shape[1]):
+                    unmixed_real_ = model(image_real[:,:,idx+1:idx+17]).cpu().squeeze()
+                    unmixed_real = torch.concat([unmixed_real, unmixed_real_[:,-1:]], axis=1)
             except:
                 breakpoint()
-                separated_real = model(image_real[:,:-1,:,:]).cpu().squeeze()
-
+                unmixed_real = model(image_real[:,:-1,:,:]).cpu().squeeze()
+        
         tifffile.imwrite("{}/target.tif".format(results_dir), image_target.numpy())
         tifffile.imwrite("{}/real_input.tif".format(results_dir, test_opt.test_epoch), image_real.cpu().numpy())
-        tifffile.imwrite("{}/real_separated_epoch_{}.tif".format(results_dir, test_opt.test_epoch), separated_real.numpy())
+        tifffile.imwrite("{}/real_unmixed_epoch_{}.tif".format(results_dir, test_opt.test_epoch), unmixed_real.numpy())
         
-        # synthetic mixed image inference
+        # Inference of synthetic mixed image 
         for a in range(11):
             image_synthetic = (a/10) * image_c1 + (1-a/10) * image_c2
             image_target = torch.stack([image_c1_wobg, image_c2_wobg])
@@ -91,17 +89,17 @@ if __name__=="__main__":
             image_synthetic = torch.unsqueeze(torch.unsqueeze(image_synthetic, 0), 0)
             if not opt.use_CPU:
                 image_synthetic = image_synthetic.cuda()
-                
+            
             model.eval()
             with torch.no_grad():
                 try:
-                    separated_synthetic = model(image_synthetic[:,:,:16]).cpu().squeeze()
-                    for idx in range(image_synthetic.shape[2]-separated_synthetic.shape[1]):
-                        separated_synthetic_ = model(image_synthetic[:,:,idx+1:idx+17]).cpu().squeeze()
-                        separated_synthetic = torch.concat([separated_synthetic, separated_synthetic_[:,-1:]], axis=1)
+                    unmixed_synthetic = model(image_synthetic[:,:,:16]).cpu().squeeze()
+                    for idx in range(image_synthetic.shape[2]-unmixed_synthetic.shape[1]):
+                        unmixed_synthetic_ = model(image_synthetic[:,:,idx+1:idx+17]).cpu().squeeze()
+                        unmixed_synthetic = torch.concat([unmixed_synthetic, unmixed_synthetic_[:,-1:]], axis=1)
                 except:
                     breakpoint()
-                    separated_synthetic = model(image_synthetic[:,:-1,:,:].cuda()).cpu().squeeze()
-
+                    unmixed_synthetic = model(image_synthetic[:,:-1,:,:].cuda()).cpu().squeeze()
+            
             tifffile.imwrite("{}/synthetic_input_{}.tif".format(results_dir,  replace2p(a/10)), image_synthetic.cpu().numpy())
-            tifffile.imwrite("{}/synthetic_separated_{}_epoch_{}.tif".format(results_dir, replace2p(a/10), test_opt.test_epoch), separated_synthetic.numpy())
+            tifffile.imwrite("{}/synthetic_unmixed_{}_epoch_{}.tif".format(results_dir, replace2p(a/10), test_opt.test_epoch), unmixed_synthetic.numpy())

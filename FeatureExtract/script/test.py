@@ -15,6 +15,13 @@ from utils.FeatureExtract.dataset import DataLoaderFeatureExtract
 from utils.image_transform import random_transform
 
 def test(dataloader, model, opt):
+    """ Test FeatureExtractNet
+    
+    Args:
+        dataloader (torch DataLoader): _description_
+        model (torch nn.Module): _description_
+        opt (argparse.Namespace): _description_
+    """
     images = list()
     image_labels = list()
     latent_features = list()
@@ -34,15 +41,15 @@ def test(dataloader, model, opt):
         inter_intra_loss_coef = opt.inter_intra_loss_coef
         inter_margin = opt.inter_margin
         intra_margin = opt.intra_margin
-    
+        
         for idx, data in enumerate(tqdm(dataloader, desc="Test FeatureExtractNet")):
-            ##### Call data #####
+            ##### Load data #####
             image, _, image_label = data
             image_label_list = list(set(image_label.tolist()))
             
             if not opt.use_CPU:
                 input_image = image.cuda()
-                
+            
             input_image, _, _ = random_transform(input_image, None, None, random_transform_rng)
             
             ##### Inference #####
@@ -95,7 +102,7 @@ def test(dataloader, model, opt):
             images.append(image.numpy())
             image_labels.append(image_label.numpy())
             latent_features.append(latent_feature.cpu().numpy())
-            
+    
     loss_mean_total = np.mean(np.array(loss_list_total))
     loss_mean_inter = np.mean(np.array(loss_list_inter))
     loss_mean_intra = np.mean(np.array(loss_list_intra))
@@ -149,10 +156,10 @@ if __name__=="__main__":
     print("The number of test dataset: {}".format(len(opt.testdata_list)))
     dataloader_test = DataLoaderFeatureExtract(opt.testdata_list, opt.protein_list, opt.patch_size, test_opt.batch_size, test_opt.batch_num, 
                                                opt.random_seed, opt.brightness_range, opt.norm_type, opt.norm_quantile, shuffle=True)
-
+    
     images, image_labels, latent_features, loss_mean_total, loss_mean_inter, loss_mean_intra \
         = test(dataloader_test, model, opt)
-        
+    
     ##### Dimension reduction #####
     tsne_features = calc_tsne(latent_features)
     twodim_visualization(tsne_features, image_labels, opt, opt.epoch, "tsne")
@@ -167,7 +174,7 @@ if __name__=="__main__":
         {"distance_dictionary": distance_dictionary, "distance_matrix": distance_matrix, 
          "pairing_protein_list": test_opt.pairing_protein_list})
     
-    ##### find optimal group of pairs #####
+    ##### Spatial expression pattern guided protein pairing #####
     find_optimal_group_of_pairs(distance_dictionary.items(), test_opt.pairing_protein_list)
     
     ##### Save test images #####
