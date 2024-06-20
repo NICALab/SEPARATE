@@ -17,10 +17,18 @@ from utils.image_transform import random_transform
 
 def train(dataloader, model, optimizer, rng, writer, epoch, opt):
     """ Train FeatureExtractNet
-    """
     
+    Args:
+        dataloader (torch DataLoader): _description_
+        model (torch nn.Module): _description_
+        optimizer (torch optimizer): _description_
+        rng (np.random.default_rng): numpy random number generator
+        writer (tensorboard SummaryWriter): _description_
+        epoch (int): _description_
+        opt (argparse.Namespace): _description_
+    """
     model.train()
-
+    
     loss_list_inter = list()
     loss_list_intra = list()
     loss_list_total = list()
@@ -33,17 +41,17 @@ def train(dataloader, model, optimizer, rng, writer, epoch, opt):
     inter_margin = opt.inter_margin
     intra_margin = opt.intra_margin
     
-    for idx, data in enumerate(tqdm(dataloader)):
-        ##### Call data #####
+    for idx, data in enumerate(tqdm(dataloader, desc="Evaluate ProteinSepNet")):
+        ##### Load data #####
         image, _, image_label = data
         image_label_list = list(set(image_label.tolist()))
         
         if not opt.use_CPU:
             image_input = image.cuda()
-            
+        
         image_input, _, _ = random_transform(image_input, None, None, rng)
         
-        ##### Update ClassifyNet #####
+        ##### Update FeatureExtractNet #####
         optimizer.zero_grad()
         latent_feature = model(image_input)
         
@@ -84,12 +92,12 @@ def train(dataloader, model, optimizer, rng, writer, epoch, opt):
         # 
         loss_total = inter_intra_loss_coef[0]*loss_inter_total \
             + inter_intra_loss_coef[1]*loss_intra_total
-
+        
         # network backprop
         loss_total.backward()
         optimizer.step()
         
-        # 
+        ##### Append to list #####
         loss_list_inter.append(loss_inter_total.item())
         loss_list_intra.append(loss_intra_total.item())
         loss_list_total.append(loss_total.item())
@@ -99,19 +107,24 @@ def train(dataloader, model, optimizer, rng, writer, epoch, opt):
             loss_mean_total = np.mean(np.array(loss_list_total))
             loss_mean_inter = np.mean(np.array(loss_list_inter))
             loss_mean_intra = np.mean(np.array(loss_list_intra))
-
+            
             writer.add_scalar("Loss_total/train_batch", loss_mean_total, epoch*len(dataloader) + idx)
             writer.add_scalar("Loss_inter/train_batch", loss_mean_inter, epoch*len(dataloader) + idx)
             writer.add_scalar("Loss_intra/train_batch", loss_mean_intra, epoch*len(dataloader) + idx)
-        
+    
     loss_mean_total = np.mean(np.array(loss_list_total))
     loss_mean_inter = np.mean(np.array(loss_list_inter))
     loss_mean_intra = np.mean(np.array(loss_list_intra))
-        
+    
     return loss_mean_total, loss_mean_inter, loss_mean_intra
 
 def evaluate(dataloader, model, opt):
     """ Evaluate FeatureExtractNet
+    
+    Args:
+        dataloader (torch DataLoader): _description_
+        model (torch nn.Module): _description_
+        opt (argparse.Namespace): _description_
     """
     images = list()
     image_labels = list()
@@ -132,15 +145,15 @@ def evaluate(dataloader, model, opt):
         inter_intra_loss_coef = opt.inter_intra_loss_coef
         inter_margin = opt.inter_margin
         intra_margin = opt.intra_margin
-    
+        
         for idx, data in enumerate(tqdm(dataloader, desc="evaluation")):
-            ##### Call data #####
+            ##### Load data #####
             image, _, image_label = data
             image_label_list = list(set(image_label.tolist()))
             
             if not opt.use_CPU:
                 input_image = image.cuda()
-                
+            
             input_image, _, _ = random_transform(input_image, None, None, random_transform_rng)
             
             ##### Inference #####
@@ -193,7 +206,7 @@ def evaluate(dataloader, model, opt):
             images.append(image.numpy())
             image_labels.append(image_label.numpy())
             latent_features.append(latent_feature.cpu().numpy())
-            
+    
     loss_mean_total = np.mean(np.array(loss_list_total))
     loss_mean_inter = np.mean(np.array(loss_list_inter))
     loss_mean_intra = np.mean(np.array(loss_list_intra))
@@ -223,12 +236,9 @@ if __name__=="__main__":
     writer = SummaryWriter("{}/tsboard/{}".format(opt.document_dir, opt.exp_name))
     
     ##### Dataset #####
-    print("number of train dataset: {}".format(len(opt.traindata_list)))
-    print("number of test dataset: {}".format(len(opt.testdata_list)))
-    
     logging.info("number of train dataset: {}".format(len(opt.traindata_list)))
     logging.info("number of train dataset: {}".format(len(opt.testdata_list)))
-
+    
     logging.info("TRAIN DATA")
     for data in opt.traindata_list:
         logging.info("      {}".format(data))
@@ -237,12 +247,14 @@ if __name__=="__main__":
     for data in opt.testdata_list:
         logging.info("      {}".format(data))
     
+    logging.info("")
+    
+    print("number of train dataset: {}".format(len(opt.traindata_list)))
     dataloader_train = DataLoaderFeatureExtract(opt.traindata_list, opt.protein_list, opt.patch_size, opt.batch_size, opt.batch_num, 
                                           opt.random_seed, opt.brightness_range, opt.norm_type, opt.norm_quantile, shuffle=True)
+    print("number of test dataset: {}".format(len(opt.testdata_list)))
     dataloader_test = DataLoaderFeatureExtract(opt.testdata_list, opt.protein_list, opt.patch_size, 256, 20, 
                                          opt.random_seed, opt.brightness_range, opt.norm_type, opt.norm_quantile, shuffle=True)
-
-    logging.info("")
     
     ##### Model, Optimizers, and Loss #####
     model = FeatureExtractNet(opt.patch_size[-1], nColor=1, mid_channels=opt.mid_channels_FeatureExtractNet, 
@@ -264,7 +276,7 @@ if __name__=="__main__":
         model.train()
         loss_total, loss_inter, loss_intra = train(dataloader_train, model, optimizer,
                                                    random_transform_rng, writer, epoch, opt)
-
+        
         # logging
         ts = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         if (epoch % opt.logging_interval == 0):            
@@ -274,7 +286,7 @@ if __name__=="__main__":
             
             logging.info(f"[{ts}] Epoch [{epoch}/{opt.n_epochs}] "+\
                 f"loss : {loss_total:.4f}, loss_inter : {loss_inter:.4f}, loss_intra : {loss_intra:.4f}")
-
+        
         # save model and optimizer
         if (opt.checkpoint_interval != -1) and (epoch % opt.checkpoint_interval == 0):
             torch.save(model.state_dict(), "{}/saved_models/{}/model_{}.pth".format(opt.results_dir, opt.exp_name, epoch))
@@ -287,6 +299,6 @@ if __name__=="__main__":
             writer.add_scalar("Loss_total/test", loss_total, epoch)
             writer.add_scalar("Loss_inter/test", loss_inter, epoch)
             writer.add_scalar("Loss_intra/test", loss_intra, epoch)
-
+            
             tsne_features = calc_tsne(latent_features)
             twodim_visualization(tsne_features, image_labels, opt, epoch, "tsne")
